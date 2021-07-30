@@ -907,18 +907,10 @@ fu_device_list_wait_for_replug (FuDeviceList *self, GError **error)
 	/* time to unplug and then re-plug */
 	do {
 		g_autoptr(GPtrArray) devices_wfr_tmp = NULL;
-
-		/* count how many devices are in the remove waiting state */
-		wait_removed = fu_device_list_devices_wait_removed (self);
-		if (wait_removed != wait_removed_old) {
-			g_debug ("devices in wait_removed: %u -> %u",
-				 wait_removed_old, wait_removed);
-			wait_removed_old = wait_removed;
-		}
 		g_usleep (1000);
 		g_main_context_iteration (NULL, FALSE);
 		devices_wfr_tmp = fu_device_list_get_wait_for_replug (self);
-		if (devices_wfr_tmp->len == 0 && wait_removed == 0)
+		if (devices_wfr_tmp->len == 0)
 			break;
 	} while (g_timer_elapsed (timer, NULL) * 1000.f < remove_delay);
 
