@@ -35,6 +35,8 @@
  */
 
 static void fu_device_finalize			 (GObject *object);
+static void
+fu_device_ensure_battery_inhibit(FuDevice *self);
 
 typedef struct {
 	gchar				*alternate_id;
@@ -1139,6 +1141,12 @@ fu_device_get_children (FuDevice *self)
 	return fwupd_device_get_children (FWUPD_DEVICE (self));
 }
 
+static void
+fu_device_battery_level_parent_notify_cb(FuContext *self, GParamSpec *pspec, FuDevice *child)
+{
+	fu_device_ensure_battery_inhibit(child);
+}
+
 /**
  * fu_device_add_child:
  * @self: a #FuDevice
@@ -1170,6 +1178,14 @@ fu_device_add_child (FuDevice *self, FuDevice *child)
 			FuDeviceInhibit *inhibit = (FuDeviceInhibit *) l->data;
 			fu_device_inhibit (child, inhibit->inhibit_id, inhibit->reason);
 		}
+	}
+
+	/* ensure parent battery levels for children */
+	if (fu_device_has_internal_flag(self, FU_DEVICE_INTERNAL_FLAG_USE_PARENT_FOR_BATTERY)) {
+		g_signal_connect(self,
+				 "notify::battery-level",
+				 G_CALLBACK(fu_device_battery_level_parent_notify_cb),
+				 child);
 	}
 
 	/* ensure the parent has the MAX() of the children's removal delay  */
@@ -1239,6 +1255,7 @@ fu_device_remove_child (FuDevice *self, FuDevice *child)
 
 	/* proxy */
 	fwupd_device_remove_child (FWUPD_DEVICE (self), FWUPD_DEVICE (child));
+	g_signal_handlers_disconnect_by_func(self, fu_device_battery_level_parent_notify_cb, child);
 
 	/* signal to the plugin */
 	g_signal_emit (self, signals[SIGNAL_CHILD_REMOVED], 0, child);
@@ -3224,9 +3241,9 @@ fu_device_set_update_state (FuDevice *self, FwupdUpdateState update_state)
 static void
 fu_device_ensure_battery_inhibit (FuDevice *self)
 {
-	FuDevicePrivate *priv = GET_PRIVATE (self);
-	if (priv->battery_level == FU_BATTERY_VALUE_INVALID ||
-	    priv->battery_level >= fu_device_get_battery_threshold (self)) {
+	guint battery_level = fu_device_get_battery_level(self);
+	guint battery_threshold = fu_device_get_battery_threshold(self);
+	if (battery_level == FU_BATTERY_VALUE_INVALID || battery_level >= battery_threshold) {
 		fu_device_uninhibit (self, "battery");
 		return;
 	}
