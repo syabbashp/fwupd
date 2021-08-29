@@ -425,10 +425,9 @@ fu_kinetic_dp_secure_aux_isp_send_payload(FuKineticDpSecureAuxIsp *self,
 							    remain_payload + chunk_offset,
 							    aux_wr_size,
 							    error)) {
-				g_prefix_error(
-				    error,
-				    "failed to AUX write at payload 0x%lX: ",
-				    (guint64)((remain_payload + chunk_offset) - payload));
+				g_prefix_error(error,
+					       "failed to AUX write at payload 0x%x: ",
+					       (guint)((remain_payload + chunk_offset) - payload));
 				return FALSE;
 			}
 
