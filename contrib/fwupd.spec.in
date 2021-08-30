@@ -432,7 +432,7 @@ done
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_hailuck.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_iommu.so
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_jabra.so
-%{_libdir}/fwupd-plugins-3/libfu_plugin_kinetic_dp.so
+%{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_kinetic_dp.so
 %if 0%{?have_uefi}
 %{_libdir}/fwupd-plugins-%{fwupdplugin_version}/libfu_plugin_lenovo_thinklmi.so
 %endif
